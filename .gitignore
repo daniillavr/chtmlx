@@ -2,3 +2,5 @@ build/
 *.html
 *.swp
 .vs
+main.*
+test

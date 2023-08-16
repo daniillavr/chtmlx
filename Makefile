@@ -1,7 +1,7 @@
 TEMP_DIR=build
 VER=0.1
 
-all: build.o_win
+all: build_test_win
 debug: clean_out shared_debug static_debug
 
 shared:
@@ -23,6 +23,8 @@ static_debug:
 build.o_win:
 	-mkdir $(TEMP_DIR)\out
 	gcc -g -Wall -c -o $(TEMP_DIR)/html.o html.c
+build_test_win:
+	gcc -g -Wall -o main main.c html.c
 clean_out:
 	rm -rf build/out
 clean_build:

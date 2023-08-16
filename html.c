@@ -2,33 +2,33 @@
 
 static	unsigned long long Serial = 0 ;
 
-char_t	Void_Tags[ VT_SIZE ][ TAGS_LEN ] =
+char	Void_Tags[ VT_SIZE ][ TAGS_LEN ] =
 		{
-			L"area" ,
-			L"base" ,
-			L"br" ,
-			L"col" ,
-			L"command" ,
-			L"embed" ,
-			L"hr" ,
-			L"img" ,
-			L"input" ,
-			L"keygen" ,
-			L"link" ,
-			L"meta" ,
-			L"param" ,
-			L"source" ,
-			L"track" ,
-			L"wbr" ,
-			L"!DOCTYPE" ,
+			"area" ,
+			"base" ,
+			"br" ,
+			"co" ,
+			"command" ,
+			"embed" ,
+			"hr" ,
+			"img" ,
+			"input" ,
+			"keygen" ,
+			"link" ,
+			"meta" ,
+			"param" ,
+			"source" ,
+			"track" ,
+			"wbr" ,
+			"!DOCTYPE" ,
 		} ;
 
-char_t	Add_Tags[ AT_SIZE ][ TAGS_LEN ] =
+char	Add_Tags[ AT_SIZE ][ TAGS_LEN ] =
 		{
-			L"math" ,
-			L"script" ,
-			L"svg" ,
-			L"style" ,
+			"math" ,
+			"script" ,
+			"sv1" ,
+			"style" ,
 		} ;
 
 
@@ -36,35 +36,36 @@ char_t	Add_Tags[ AT_SIZE ][ TAGS_LEN ] =
 // 	params:
 //	 	fl - opened file with text
 // 	return:
-// 		converted text to wide characters
+// 		text from file
 //
-// ** Convert text to wide characters text
-char_t *
+//
+char *
 readfile( FILE *fl )
 {
-	char_t	*bf	,
+	char	*bf	,
 		*stt	;
 	uint	cnt	;
 
 	setlocale( LC_ALL , "en_US.utf8" ) ;
 	cnt = 0 ;
 
-	for( ; !feof( fl ) && !ferror( fl ) ; fgetwc( fl ) , ++cnt ) ;
+	for( ; !feof( fl ) && !ferror( fl ) ; fgetc( fl ) , ++cnt ) ;
 
-	bf = malloc( WCH_SZ * ( cnt + 1 ) ) ;
-	bf[ cnt ] = L'\0' ;
+	bf = malloc( CH_SZ * ( cnt + 1 ) ) ;
+	bf[ cnt ] = '\0' ;
 
 	stt = bf ;
 
 	fseek( fl , 0L , SEEK_SET ) ;
 
 	for( ; cnt > 0 ; ++bf , --cnt )
-		*bf = fgetwc( fl ) ;
+		*bf = fgetc( fl ) ;
 		
 	return stt ;
 }
 
-//readText( char **text , char_t **stream , char typeRead , char_t *tag )
+
+//readText( char **text , char **stream , char typeRead , char *tag )
 //	params:
 //		text - pointer to memory, where need to be placed result of readed text of body of tag
 //		stream - poitner to stream of bytes( html text )
@@ -78,58 +79,58 @@ readfile( FILE *fl )
 //		pointer to text ;
 //
 // ** Read body of a tag( text within >< )
-static char_t *
-readText( char_t **text , char_t **stream , char typeRead , char_t *tag )
+static char *
+readText( char **text , char **stream , char typeRead , char *tag )
 {
 	uint		size		,
 			count		;
-	char_t		*ret		,
+	char		*ret		,
 			*buffer		,
 			*pTag		; // Parsed tag
 
-	buffer = malloc( WCH_SZ * BF_SZ ) ;
+	buffer = malloc( CH_SZ * BF_SZ ) ;
 
 	if( typeRead & 0x1 )
 	{
 		count = 0 ;
-		size = wcslen( tag ) ;
+		size = strlen( tag ) ;
 		pTag = *stream ;
 
-		for( ; **stream != L'\0' && wcsncmp( pTag , tag , size ) ; )
+		for( ; **stream != '\0' && strncmp( pTag , tag , size ) ; )
 		{
-			if( pTag != *stream && **stream == L'<' )
+			if( pTag != *stream && **stream == '<' )
 				buffer[ count++ ] = *( *stream )++ ;
 
-			for( ; **stream != L'<' && **stream != L'\0' ; ( *stream )++ )
-				if( iswprint( **stream ) )
+			for( ; **stream != '<' && **stream != '\0' ; ( *stream )++ )
+				if( isprint( **stream ) )
 					buffer[ count++ ] = **stream ;
 
 			pTag = *stream ;
 			++pTag ;
 			++pTag ;
 		}
-		for( ; *pTag != L'\0' && *pTag != L'>' ; ++pTag ) ;
+		for( ; *pTag != '\0' && *pTag != '>' ; ++pTag ) ;
 		++pTag ;
 		*stream = pTag ;
 	}
 	else if( typeRead & 0x2 )
 	{
 		count = 0 ;
-		size = wcslen( tag ) ;
+		size = strlen( tag ) ;
 
-		for( ; **stream != L'\0' && wcsncmp( *stream , tag , size ) ; )
+		for( ; **stream != '\0' && strncmp( *stream , tag , size ) ; )
 		{
-			if( **stream == L'-' )
+			if( **stream == '-' )
 				buffer[ count++ ] = *( *stream )++ ;
 
-			for( ; **stream != L'-' && **stream != L'\0' ; ( *stream )++ )
-				if( iswprint( **stream ) )
+			for( ; **stream != '-' && **stream != '\0' ; ( *stream )++ )
+				if( isprint( **stream ) )
 					buffer[ count++ ] = **stream ;
 		}
 	}
 	else
-		for( count = 0 ; **stream != L'<' && **stream != L'\0' ; ( *stream )++ )
-			if( iswprint( **stream ) )
+		for( count = 0 ; **stream != '<' && **stream != '\0' ; ( *stream )++ )
+			if( isprint( **stream ) )
 				buffer[ count++ ] = **stream ;
 
 
@@ -143,29 +144,29 @@ readText( char_t **text , char_t **stream , char typeRead , char_t *tag )
 
 	if( *text )
 	{
-		size = wcslen( *text ) ;
-		ret = malloc( WCH_SZ * ( size + count + 2 ) ) ;
-		wcscpy( ret , *text ) ;
+		size = strlen( *text ) ;
+		ret = malloc( CH_SZ * ( size + count + 2 ) ) ;
+		strcpy( ret , *text ) ;
 
 		free( *text ) ;
 		*text = ret ;
 
-		( *text )[ size ] = L' ' ;
-		memcpy( ( *text ) + size + 1 , buffer , WCH_SZ * count ) ;
-		( *text )[ count + size + 1 ] = L'\0' ;
+		( *text )[ size ] = ' ' ;
+		memcpy( ( *text ) + size + 1 , buffer , CH_SZ * count ) ;
+		( *text )[ count + size + 1 ] = '\0' ;
 	}
 	else
 	{
-		if( ( ret = calloc( count + 2 , WCH_SZ ) ) == NULL )
+		if( ( ret = calloc( count + 2 , CH_SZ ) ) == NULL )
 		{
-			fwprintf( stderr , L"readText: Can't allocate %d bytes for buffer.\n" , count ) ;
+			fprintf( stderr , "readText: Can't allocate %d bytes for buffer.\n" , count ) ;
 			exit( 0 ) ;
 		}
 
 		*text = ret ;
 
-		memcpy( ( *text ) + size  , buffer , WCH_SZ * count ) ;
-		( *text )[ count + size + 1 ] = L'\0' ;
+		memcpy( ( *text ) + size  , buffer , CH_SZ * count ) ;
+		( *text )[ count + size + 1 ] = '\0' ;
 	}
 
 	free( buffer ) ;
@@ -174,7 +175,7 @@ readText( char_t **text , char_t **stream , char typeRead , char_t *tag )
 }
 
 
-// compTag( char_t *in , char_t *list , int size )
+// compTag( char *in , char *list , int size )
 // 	params:
 // 		in - tag for compare
 // 		list - list of tags for compared with in
@@ -184,21 +185,21 @@ readText( char_t **text , char_t **stream , char typeRead , char_t *tag )
 // 		else 0
 //
 // ** compare one tag with tags from list
-static char_t
-compTag( char_t *in , char_t *list , int size )
+static char
+compTag( char *in , char *list , int size )
 {
 	uint	sz1	,
 		i	;
 
-	sz1 = wcslen( in ) ;
+	sz1 = strlen( in ) ;
 
 	for( i = 0 ; i < size ; ++i )
-		if( sz1 == wcslen( &list[ i * TAGS_LEN ] ) && !wcscmp( in , &list[ i * TAGS_LEN ] ) )
+		if( sz1 == strlen( &list[ i * TAGS_LEN ] ) && !strcmp( in , &list[ i * TAGS_LEN ] ) )
 			return 1 ;
 	return 0 ;
 }
 
-// wcsnac( char_t **dest , char_t *source , uint size )
+// strnac( char **dest , char *source , uint size )
 // 	params:
 // 		dest - pointer for allocating memory
 // 		source - source to copying
@@ -207,21 +208,21 @@ compTag( char_t *in , char_t *list , int size )
 // 		pointer to dest
 //
 // ** Allocate memory for dest and copy string from source to dest
-char_t *
-wcsnac( char_t **dest , char_t *source , uint size )
+char *
+strnac( char **dest , char *source , uint size )
 {
 	if( !size )
 		*dest = NULL ;
 	{
-		*dest = malloc( WCH_SZ * ( size + 1 ) ) ;
-		memcpy( *dest , source , size * WCH_SZ ) ;
-		(*dest )[ size ] = L'\0' ;
+		*dest = malloc( CH_SZ * ( size + 1 ) ) ;
+		memcpy( *dest , source , size * CH_SZ ) ;
+		(*dest )[ size ] = '\0' ;
 	}
 
 	return *dest ;
 }
 
-// parse_attributes( char_t **content , struct attriute **attrs )
+// parse_attributes( char **content , struct attriute **attrs )
 // 	params:
 // 		content - poitner to stream of bytes( html text )
 // 		attrs - pointer to attributes of current html element
@@ -230,33 +231,33 @@ wcsnac( char_t **dest , char_t *source , uint size )
 //
 // ** Parse attributes for current html element
 static uint
-parse_attributes( char_t **content , struct attribute **attrs )
+parse_attributes( char **content , struct attribute **attrs )
 {
 	struct parse_attribute	*iterAttrs	,
 				*headAttrs	;
 	uint			ui_attr_cnt	,
 				ui_cntr		,
 				ui_iter		;
-	char_t			*c_buffer	,
+	char			*c_buffer	,
 				quotes[ ]	=
-				L" '\""		;
+				" '\""		;
 	
-	c_buffer = malloc( WCH_SZ * SZ_ATTR_BUFF ) ;
+	c_buffer = malloc( CH_SZ * SZ_ATTR_BUFF ) ;
 	headAttrs = iterAttrs = calloc( 1 , sizeof( struct parse_attribute ) ) ;
 	
 	ui_attr_cnt = 0 ;
 	*attrs = NULL ;
 
 
-	while( **content != L'>' )
+	while( **content != '>' )
 	{
-		for( ; **content == L' ' ; ++( *content ) ) ;
-		for( ui_cntr = 0 ; **content != L'>' && **content != L'=' && **content != L' ' ;  ++( *content ) , ++ui_cntr )
+		for( ; **content == ' ' ; ++( *content ) ) ;
+		for( ui_cntr = 0 ; **content != '>' && **content != '=' && **content != ' ' ;  ++( *content ) , ++ui_cntr )
 			c_buffer[ ui_cntr ] = **content ;
 
-		wcsnac( &iterAttrs->attr , c_buffer , ui_cntr ) ;
+		strnac( &iterAttrs->attr , c_buffer , ui_cntr ) ;
 
-		if( **content == L'=' )
+		if( **content == '=' )
 		{
 			++( *content ) ;
 			
@@ -271,7 +272,7 @@ parse_attributes( char_t **content , struct attribute **attrs )
 			if( ui_iter )
 				( *content )++ ;
 
-			wcsnac( &iterAttrs->value , c_buffer , ui_cntr ) ;
+			strnac( &iterAttrs->value , c_buffer , ui_cntr ) ;
 		}
 		else
 			iterAttrs->value = NULL ;
@@ -289,13 +290,13 @@ parse_attributes( char_t **content , struct attribute **attrs )
 
 		for( iterAttrs = headAttrs , ui_iter = 0 ; ui_iter < ui_attr_cnt ; ++ui_iter , iterAttrs = iterAttrs->next )
 		{
-			ui_cntr = wcslen( iterAttrs->attr ) ;
-			wcsnac( &( *attrs )[ ui_iter ].attr , iterAttrs->attr , ui_cntr ) ;
+			ui_cntr = strlen( iterAttrs->attr ) ;
+			strnac( &( *attrs )[ ui_iter ].attr , iterAttrs->attr , ui_cntr ) ;
 
 			if( iterAttrs->value )
 			{
-				ui_cntr = wcslen( iterAttrs->value ) ;
-				wcsnac( &( *attrs )[ ui_iter ].value , iterAttrs->value , ui_cntr ) ;
+				ui_cntr = strlen( iterAttrs->value ) ;
+				strnac( &( *attrs )[ ui_iter ].value , iterAttrs->value , ui_cntr ) ;
 			}
 			else
 				( *attrs )[ ui_iter ].value = NULL ;
@@ -316,7 +317,7 @@ parse_attributes( char_t **content , struct attribute **attrs )
 	return ui_attr_cnt ;
 }
 
-// parse_tag( char_t **stream , char_t buffer , uint size )
+// parse_tag( char **stream , char buffer , uint size )
 // 	params:
 // 		stream - poitner to stream of bytes( html text )
 // 		buffer - point to buffer, where to write tag name
@@ -326,29 +327,29 @@ parse_attributes( char_t **content , struct attribute **attrs )
 //
 // ** Parse name of tag
 static uint
-parse_tag( char_t **stream , char_t *buffer , uint size )
+parse_tag( char **stream , char *buffer , uint size )
 {
 	uint	i	;
 
-	if( **stream != L'<' )
+	if( **stream != '<' )
 		return 0 ;
 	
 	(*stream)++ ;
 	i = 0 ;
 
-	if( **stream == L'/' || **stream == '!' )
+	if( **stream == '/' || **stream == '!' )
 		buffer[ i++ ] = *( ( *stream )++ ) ;
 	
-	if( iswalpha( **stream ) )
-		for( ; i < size && **stream != L'\0' && iswalpha( **stream ) ; (*stream)++ )
+	if( isalnum( **stream ) )
+		for( ; i < size && **stream != '\0' && ( isalnum( **stream ) || **stream == '-' ) ; (*stream)++ )
 			buffer[ i++ ] = **stream ;
 	else
-		for( ; i < size && i < 3 && **stream != L'\0' ; (*stream)++ )
+		for( ; i < size && i < 3 && **stream != '\0' ; (*stream)++ )
 			buffer[ i++ ] = **stream ;
 	return i ;
 }
 
-// html_parse( char_t *content )
+// html_parse( char *content )
 // 	params:
 // 		content - poitner to stream of bytes( html text )
 // 	return:
@@ -356,29 +357,29 @@ parse_tag( char_t **stream , char_t *buffer , uint size )
 //
 // ** Generate DOM from text
 struct node *
-html_parse( char_t *content )
+html_parse( char *content )
 {
 	struct node	*node_root	,
 			*node_curr	,
 			*node_temp	;
 	uint		i_cntr		;
-	char_t		*c_buffer	;
+	char		*c_buffer	;
 
-	c_buffer = calloc( 1024 , WCH_SZ ) ;
+	c_buffer = calloc( 1024 , CH_SZ ) ;
 
 	node_curr = node_root = calloc( 1 , sizeof(  struct node ) )	;
 
-	for( ; *content != L'\0' ; )
+	for( ; *content != '\0' ; )
 	{
-		for( ; *content != L'<' && *content != L'\0' ; ++content ) ;
-		i_cntr = parse_tag( &content , c_buffer , WCH_SZ * 1024 ) ; 
+		for( ; *content != '<' && *content != '\0' ; ++content ) ;
+		i_cntr = parse_tag( &content , c_buffer , CH_SZ * 1024 ) ; 
 
 		if( i_cntr )
 		{
-			if( *c_buffer == L'/' && node_curr && node_curr->tag && !wcsncmp( &c_buffer[ 1 ] , node_curr->tag , i_cntr - 1 ) )
+			if( *c_buffer == '/' && node_curr && node_curr->tag && !strncmp( &c_buffer[ 1 ] , node_curr->tag , i_cntr - 1 ) )
 			{
 #ifdef DEBUG
-				fwprintf( stderr , L"%d: %ls closed.\n" , node_curr->n_parsed , node_curr->tag ) ;
+				fprintf( stderr , "%d: %ls closed.\n" , node_curr->n_parsed , node_curr->tag ) ;
 #endif
 				if( node_curr->parent )
 					node_curr = node_curr->parent ;
@@ -399,17 +400,17 @@ html_parse( char_t *content )
 					node_curr->l_child = node_curr->f_child = node_temp ;
 				node_curr->child_number++ ;
 
-				wcsnac( &node_temp->tag , c_buffer , i_cntr ) ;
+				strnac( &node_temp->tag , c_buffer , i_cntr ) ;
 #ifdef DEBUG
-				fwprintf( stderr , L"%d: %ls opened.\n" , node_temp->n_parsed , node_temp->tag ) ;
+				fprintf( stderr , "%d: %ls opened.\n" , node_temp->n_parsed , node_temp->tag ) ;
 #endif
-				if( !wcsncmp( node_temp->tag , L"!--" , 3 ) )
+				if( !strncmp( node_temp->tag , "!--" , 3 ) )
 #ifdef DEBUG
 				{
 #endif
-					readText( &node_temp->text ,  &content , 2 , L"-->" ) ;
+					readText( &node_temp->text ,  &content , 2 , "-->" ) ;
 #ifdef DEBUG
-					fwprintf( stderr , L"%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
+					fprintf( stderr , "%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
 				}
 #endif
 				else
@@ -417,26 +418,26 @@ html_parse( char_t *content )
 					node_temp->attr_number = parse_attributes( &content , &node_temp->attrs ) ;
 					node_curr = node_temp ;
 					
-					for( ; *content != L'>' ; ++content ) ;
+					for( ; *content != '>' ; ++content ) ;
 					++content ;
 		
-					if( compTag( node_temp->tag , ( char_t* )Void_Tags , SIZE_VOID_TAGS ) )
+					if( compTag( node_temp->tag , ( char* )Void_Tags , SIZE_VOID_TAGS ) )
 #ifdef DEBUG
 					{
 #endif
 						node_curr = node_curr->parent ;
 #ifdef DEBUG
-						fwprintf( stderr , L"%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
+						fprintf( stderr , "%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
 					}
 #endif
 					else
 					{		
-						if( compTag( node_curr->tag , ( char_t* )Add_Tags , SIZE_ADD_TAGS ) )
+						if( compTag( node_curr->tag , ( char* )Add_Tags , SIZE_ADD_TAGS ) )
 						{
 							readText( &node_curr->text , &content , 1 , node_curr->tag ) ;
 							node_curr = node_curr->parent ;
 #ifdef DEBUG
-							fwprintf( stderr , L"%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
+							fprintf( stderr , "%d: %ls closed.\n" , node_temp->n_parsed , node_temp->tag ) ;
 #endif
 						}
 						else
@@ -472,35 +473,35 @@ print_tree_to_file( struct node *nod , uint tabs , FILE *out )
 		return ;
 
 	for( uint iter = 0 ; iter < tabs ; ++iter )
-		fwprintf( out , TAB ) ;
+		fprintf( out , TAB ) ;
 
 	if( nod->parent )
 	{
 #ifdef DEBUG
-		fwprintf( out , L"%Lu: " , nod->n_parsed ) ;
+		fprintf( out , "%Lu: " , nod->n_parsed ) ;
 #endif
-		fwprintf( out , L"<%ls" , nod->tag ) ;
+		fprintf( out , "<%s" , nod->tag ) ;
 
 		for( uint iter = 0 ; iter < nod->attr_number ; ++iter )
-			fwprintf( out , L" %ls=\"%ls\"" , nod->attrs[ iter ].attr , nod->attrs[ iter ].value ) ;
+			fprintf( out , " %s=\"%s\"" , nod->attrs[ iter ].attr , nod->attrs[ iter ].value ) ;
 		
-		if( wcscmp( nod->tag , L"!--" ) )
-			fwprintf( out , L">\n" ) ;
+		if( strcmp( nod->tag , "!--" ) )
+			fprintf( out , ">\n" ) ;
 
 		if( nod->text )
 		{	
-			if( wcscmp( nod->tag , L"!--" ) )
+			if( strcmp( nod->tag , "!--" ) )
 			{
 				for( uint iter = 0 ; iter < tabs ; ++iter )
-					fwprintf( out , TAB ) ;
-				fwprintf( out , L"'%ls'\n" , nod->text ) ;
+					fprintf( out , TAB ) ;
+				fprintf( out , "'%s'\n" , nod->text ) ;
 			}
 			else
-				fwprintf( out , L"'%ls'" , nod->text ) ;
+				fprintf( out , "'%s'" , nod->text ) ;
 		}
 
-		if( !wcscmp( nod->tag , L"!--" ) )
-			fwprintf( out , L"-->\n" ) ;
+		if( !strcmp( nod->tag , "!--" ) )
+			fprintf( out , "-->\n" ) ;
 	}
 	else
 		tabs = -1 ;
@@ -514,16 +515,16 @@ print_tree_to_file( struct node *nod , uint tabs , FILE *out )
 			print_tree_to_file( tmp , tabs + 1 , out ) ;
 	}
 
-	if( nod->parent && wcscmp( nod->tag , L"!--" ) )
+	if( nod->parent && strcmp( nod->tag , "!--" ) )
 	{
 		for( uint iter = 0 ; iter < tabs ; ++iter )
-			fwprintf( out , TAB ) ;
+			fprintf( out , TAB ) ;
 #ifdef DEBUG
-		fwprintf( out , L"%Lu: " , nod->n_parsed ) ;
+		fprintf( out , "%Lu: " , nod->n_parsed ) ;
 #endif
 
-		if( wcscmp( nod->tag , L"!--" ) )
-			fwprintf( out , L"</%ls>\n" , nod->tag ) ;
+		if( strcmp( nod->tag , "!--" ) )
+			fprintf( out , "</%s>\n" , nod->tag ) ;
 	}
 
 	return ;
@@ -605,10 +606,10 @@ addChild( struct node *root , struct node *child )
 	for( n_i = child->f_child ; n_i ; n_i = n_i->next )
 		addChild( tmp , n_i ) ;
 
-	wcsnac( &tmp->tag , child->tag , wcslen( child->tag ) ) ;
+	strnac( &tmp->tag , child->tag , strlen( child->tag ) ) ;
 
 	if( child->text )
-		wcsnac( &tmp->text , child->text , wcslen( child->text ) ) ;
+		strnac( &tmp->text , child->text , strlen( child->text ) ) ;
 
 	if( child->attr_number )
 	{
@@ -616,10 +617,10 @@ addChild( struct node *root , struct node *child )
 
 		for( i = 0 ; i < child->attr_number ; ++i )
 		{
-			wcsnac( &tmp->attrs[ i ].attr , child->attrs[ i ].attr , wcslen( child->attrs[ i ].attr ) ) ;
+			strnac( &tmp->attrs[ i ].attr , child->attrs[ i ].attr , strlen( child->attrs[ i ].attr ) ) ;
 
 			if( child->attrs[ i ].value )
-				wcsnac( &tmp->attrs[ i ].value , child->attrs[ i ].value , wcslen( child->attrs[ i ].value ) ) ;
+				strnac( &tmp->attrs[ i ].value , child->attrs[ i ].value , strlen( child->attrs[ i ].value ) ) ;
 			else
 				tmp->attrs[ i ].value = NULL ;
 		}
@@ -639,7 +640,7 @@ addChild( struct node *root , struct node *child )
 	return 1 ;
 }
 
-// find_elems_by_tag( char_t *elem , struct node *nd , struct node *ret )
+// find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
 //	params:
 //		elem - name of tag
 //		nd - root of tree
@@ -649,11 +650,11 @@ addChild( struct node *root , struct node *child )
 //
 // ** find all elements with given tag elem and write them to childs of ret
 void
-find_elems_by_tag( char_t *elem , struct node *nd , struct node *ret )
+find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
 {
 	struct node	*chld	;
 
-	if( nd->tag && !wcscmp( nd->tag , elem ) )
+	if( nd->tag && !strcmp( nd->tag , elem ) )
 		addChild( ret , nd ) ;
 	
 
@@ -664,7 +665,7 @@ find_elems_by_tag( char_t *elem , struct node *nd , struct node *ret )
 	return ;
 }
 
-// find_elems_by_attr( char_t *name , char_t *value , struct node *nd , struct node *ret )
+// find_elems_by_attr( char *name , char *value , struct node *nd , struct node *ret )
 //	params:
 //		name - name of attribute
 //		value - value of given attribute
@@ -675,7 +676,7 @@ find_elems_by_tag( char_t *elem , struct node *nd , struct node *ret )
 //
 // ** find all elements with given attribute and write them to childs of ret. Value for now cannot be NULL, same for name. Will implement later.
 void
-find_elems_by_attr( char_t *name , char_t *value , struct node *nd , struct node *ret )
+find_elems_by_attr( char *name , char *value , struct node *nd , struct node *ret )
 {
 	struct node	*chld	;
 
@@ -689,8 +690,8 @@ find_elems_by_attr( char_t *name , char_t *value , struct node *nd , struct node
 
 	if( nd->attr_number )
 		for( i = 0 ; !c && i < nd->attr_number ; ++i )
-			if( ( name && !wcscmp( nd->attrs[ i ].attr , name ) ) || !name )
-				if( ( value && wcsstr( nd->attrs[ i ].value , value ) ) || !value )
+			if( ( name && !strcmp( nd->attrs[ i ].attr , name ) ) || !name )
+				if( ( value && strstr( nd->attrs[ i ].value , value ) ) || !value )
 					++c ;
 	if( c )
 		addChild( ret , nd ) ;
@@ -702,7 +703,7 @@ find_elems_by_attr( char_t *name , char_t *value , struct node *nd , struct node
 	return ;
 }
 
-// find_elems_by_text( char_t *text , struct node *nd , struct node *ret )
+// find_elems_by_text( char *text , struct node *nd , struct node *ret )
 //	params:
 //		text - text to find in body if tag
 //		nd - root of tree
@@ -712,11 +713,11 @@ find_elems_by_attr( char_t *name , char_t *value , struct node *nd , struct node
 //
 // ** find all elements with given text and write them to childs of ret
 void
-find_elems_by_text( char_t *text , struct node *nd , struct node *ret )
+find_elems_by_text( char *text , struct node *nd , struct node *ret )
 {
 	struct node	*chld	;
 
-	if( nd->text && wcsstr( nd->text , text ) )
+	if( nd->text && strstr( nd->text , text ) )
 		addChild( ret , nd ) ;
 
 	if( nd->child_number )
