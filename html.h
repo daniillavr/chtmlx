@@ -8,23 +8,18 @@
 #include <wchar.h>
 #include <locale.h>
 
-#define	uint		unsigned int
-#define ull		unsigned long long
-#define	TAB		" "
-#define	BF_SZ		( 1024 * 1024 * 10 )
-#define SZ_ATTR_BUFF	( 1024 * 1024 )
-#define WCH_SZ		sizeof( wchar_t )
-#define CH_SZ		sizeof( char )
-#define char_t		wchar_t
-#define TAGS_LEN	10
-#define VT_SIZE		17
-#define AT_SIZE		4
+#define	uint			unsigned int
+#define ull			unsigned long long
+#define HTML_VT_SIZE	17
+#define HTML_AT_SIZE			4
+#define HTML_TAGS_LEN		10
+#define HTML_CH_SZ			sizeof( char )
 
-extern char Void_Tags[ VT_SIZE ][ TAGS_LEN ] ;
-extern char Add_Tags[ AT_SIZE ][ TAGS_LEN ] ;
+extern char Void_Tags[ HTML_VT_SIZE ][ HTML_TAGS_LEN ] ;
+extern char Add_Tags[ HTML_AT_SIZE ][ HTML_TAGS_LEN ] ;
 
-#define SIZE_VOID_TAGS ( sizeof( Void_Tags ) / ( CH_SZ * TAGS_LEN ) ) 
-#define SIZE_ADD_TAGS ( sizeof( Add_Tags ) / ( CH_SZ * TAGS_LEN ) ) 
+#define SIZE_VOID_TAGS ( sizeof( Void_Tags ) / ( HTML_CH_SZ * HTML_TAGS_LEN ) ) 
+#define SIZE_ADD_TAGS ( sizeof( Add_Tags ) / ( HTML_CH_SZ * HTML_TAGS_LEN ) ) 
 
 struct attribute
 {
@@ -39,13 +34,13 @@ struct parse_attribute
 	struct parse_attribute	*next	;
 } ;
 
-struct node
+struct html_node
 {
 	uint			attr_number	;
 	uint			child_number	;
 	ull			n_parsed	;
 
-	struct node		*next		,
+	struct html_node	*next		,
 				*prev		,
 				*parent		,
 				*f_child	,
@@ -55,15 +50,15 @@ struct node
 				*text		;
 } ;
 
-struct node *html_parse( char* ) ;
+struct html_node *html_parse( char* ) ;
 
 char *readfile( FILE * ) ;
 
-int free_nodes( struct node* ) ;
+int free_nodes( struct html_node* ) ;
 
-void print_tree_to_file( struct node * , uint , FILE * ) ;
-void find_elems_by_tag( char * , struct node * , struct node * ) ;
-void find_elems_by_attr( char * , char * , struct node *root , struct node *ret ) ;
-void find_elems_by_text( char * , struct node * , struct node * ) ;
+void print_tree_to_file( struct html_node * , uint , FILE * ) ;
+void find_elems_by_tag( char * , struct html_node * , struct html_node * ) ;
+void find_elems_by_attr( char * , char * , struct html_node *root , struct html_node *ret ) ;
+void find_elems_by_text( char * , struct html_node * , struct html_node * ) ;
 
 #endif

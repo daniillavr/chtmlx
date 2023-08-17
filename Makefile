@@ -1,7 +1,7 @@
 TEMP_DIR=build
 VER=0.1
 
-all: build_test_win
+all: build.o_win
 debug: clean_out shared_debug static_debug
 
 shared:

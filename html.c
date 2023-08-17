@@ -1,8 +1,14 @@
 #include "html.h"
 
+#define	TAB		" "
+#define	BF_SZ		( 1024 * 1024 * 10 )
+#define SZ_ATTR_BUFF	( 1024 * 1024 )
+#define WHTML_CH_SZ		sizeof( wchar_t )
+#define char_t		wchar_t
+
 static	unsigned long long Serial = 0 ;
 
-char	Void_Tags[ VT_SIZE ][ TAGS_LEN ] =
+char	Void_Tags[ HTML_VT_SIZE ][ HTML_TAGS_LEN ] =
 		{
 			"area" ,
 			"base" ,
@@ -23,7 +29,7 @@ char	Void_Tags[ VT_SIZE ][ TAGS_LEN ] =
 			"!DOCTYPE" ,
 		} ;
 
-char	Add_Tags[ AT_SIZE ][ TAGS_LEN ] =
+char	Add_Tags[ HTML_AT_SIZE ][ HTML_TAGS_LEN ] =
 		{
 			"math" ,
 			"script" ,
@@ -51,7 +57,7 @@ readfile( FILE *fl )
 
 	for( ; !feof( fl ) && !ferror( fl ) ; fgetc( fl ) , ++cnt ) ;
 
-	bf = malloc( CH_SZ * ( cnt + 1 ) ) ;
+	bf = malloc( HTML_CH_SZ * ( cnt + 1 ) ) ;
 	bf[ cnt ] = '\0' ;
 
 	stt = bf ;
@@ -88,7 +94,7 @@ readText( char **text , char **stream , char typeRead , char *tag )
 			*buffer		,
 			*pTag		; // Parsed tag
 
-	buffer = malloc( CH_SZ * BF_SZ ) ;
+	buffer = malloc( HTML_CH_SZ * BF_SZ ) ;
 
 	if( typeRead & 0x1 )
 	{
@@ -145,19 +151,19 @@ readText( char **text , char **stream , char typeRead , char *tag )
 	if( *text )
 	{
 		size = strlen( *text ) ;
-		ret = malloc( CH_SZ * ( size + count + 2 ) ) ;
+		ret = malloc( HTML_CH_SZ * ( size + count + 2 ) ) ;
 		strcpy( ret , *text ) ;
 
 		free( *text ) ;
 		*text = ret ;
 
 		( *text )[ size ] = ' ' ;
-		memcpy( ( *text ) + size + 1 , buffer , CH_SZ * count ) ;
+		memcpy( ( *text ) + size + 1 , buffer , HTML_CH_SZ * count ) ;
 		( *text )[ count + size + 1 ] = '\0' ;
 	}
 	else
 	{
-		if( ( ret = calloc( count + 2 , CH_SZ ) ) == NULL )
+		if( ( ret = calloc( count + 2 , HTML_CH_SZ ) ) == NULL )
 		{
 			fprintf( stderr , "readText: Can't allocate %d bytes for buffer.\n" , count ) ;
 			exit( 0 ) ;
@@ -165,7 +171,7 @@ readText( char **text , char **stream , char typeRead , char *tag )
 
 		*text = ret ;
 
-		memcpy( ( *text ) + size  , buffer , CH_SZ * count ) ;
+		memcpy( ( *text ) + size  , buffer , HTML_CH_SZ * count ) ;
 		( *text )[ count + size + 1 ] = '\0' ;
 	}
 
@@ -194,7 +200,7 @@ compTag( char *in , char *list , int size )
 	sz1 = strlen( in ) ;
 
 	for( i = 0 ; i < size ; ++i )
-		if( sz1 == strlen( &list[ i * TAGS_LEN ] ) && !strcmp( in , &list[ i * TAGS_LEN ] ) )
+		if( sz1 == strlen( &list[ i * HTML_TAGS_LEN ] ) && !strcmp( in , &list[ i * HTML_TAGS_LEN ] ) )
 			return 1 ;
 	return 0 ;
 }
@@ -214,8 +220,8 @@ strnac( char **dest , char *source , uint size )
 	if( !size )
 		*dest = NULL ;
 	{
-		*dest = malloc( CH_SZ * ( size + 1 ) ) ;
-		memcpy( *dest , source , size * CH_SZ ) ;
+		*dest = malloc( HTML_CH_SZ * ( size + 1 ) ) ;
+		memcpy( *dest , source , size * HTML_CH_SZ ) ;
 		(*dest )[ size ] = '\0' ;
 	}
 
@@ -242,7 +248,7 @@ parse_attributes( char **content , struct attribute **attrs )
 				quotes[ ]	=
 				" '\""		;
 	
-	c_buffer = malloc( CH_SZ * SZ_ATTR_BUFF ) ;
+	c_buffer = malloc( HTML_CH_SZ * SZ_ATTR_BUFF ) ;
 	headAttrs = iterAttrs = calloc( 1 , sizeof( struct parse_attribute ) ) ;
 	
 	ui_attr_cnt = 0 ;
@@ -356,23 +362,23 @@ parse_tag( char **stream , char *buffer , uint size )
 // 		DOM tree
 //
 // ** Generate DOM from text
-struct node *
+struct html_node *
 html_parse( char *content )
 {
-	struct node	*node_root	,
-			*node_curr	,
-			*node_temp	;
-	uint		i_cntr		;
-	char		*c_buffer	;
+	struct html_node	*node_root	,
+				*node_curr	,
+				*node_temp	;
+	uint			i_cntr		;
+	char			*c_buffer	;
 
-	c_buffer = calloc( 1024 , CH_SZ ) ;
+	c_buffer = calloc( 1024 , HTML_CH_SZ ) ;
 
-	node_curr = node_root = calloc( 1 , sizeof(  struct node ) )	;
+	node_curr = node_root = calloc( 1 , sizeof(  struct html_node ) )	;
 
 	for( ; *content != '\0' ; )
 	{
 		for( ; *content != '<' && *content != '\0' ; ++content ) ;
-		i_cntr = parse_tag( &content , c_buffer , CH_SZ * 1024 ) ; 
+		i_cntr = parse_tag( &content , c_buffer , HTML_CH_SZ * 1024 ) ; 
 
 		if( i_cntr )
 		{
@@ -386,7 +392,7 @@ html_parse( char *content )
 			}
 			else
 			{
-				node_temp = calloc( 1 , sizeof( struct node ) ) ;
+				node_temp = calloc( 1 , sizeof( struct html_node ) ) ;
 				node_temp->parent = node_curr ;
 				node_temp->n_parsed = Serial++ ;
 				
@@ -454,7 +460,7 @@ html_parse( char *content )
 	return node_root ;
 }
 
-// print_tree_to_file( struct node *nod , uint tabs , FILE *out )
+// print_tree_to_file( struct html_node *nod , uint tabs , FILE *out )
 // 	params:
 // 		nod - root of tree
 // 		tabs - number of tabs to put before tag( etc per level, formula = level of nesting * tabs )
@@ -464,7 +470,7 @@ html_parse( char *content )
 //
 // ** Outputing tree to file
 void
-print_tree_to_file( struct node *nod , uint tabs , FILE *out )
+print_tree_to_file( struct html_node *nod , uint tabs , FILE *out )
 {
 	
 	setlocale( LC_ALL , "en_US.utf8" ) ;
@@ -510,7 +516,7 @@ print_tree_to_file( struct node *nod , uint tabs , FILE *out )
 	{
 		print_tree_to_file( nod->f_child , tabs + 1 , out ) ;
 
-		struct node *tmp = nod->f_child->next ;
+		struct html_node *tmp = nod->f_child->next ;
 		for( uint iter = 1 ; iter < nod->child_number ; ++iter , tmp = tmp->next )
 			print_tree_to_file( tmp , tabs + 1 , out ) ;
 	}
@@ -531,7 +537,7 @@ print_tree_to_file( struct node *nod , uint tabs , FILE *out )
 
 }
 
-// free_nodes( struct node *nd )
+// free_nodes( struct html_node *nd )
 // 	params:
 // 		nd - root of tree
 // 	return:
@@ -539,9 +545,9 @@ print_tree_to_file( struct node *nod , uint tabs , FILE *out )
 //
 // ** Clearing memory of tree
 int
-free_nodes( struct node* nd )
+free_nodes( struct html_node* nd )
 {
-	struct node	*chld	,
+	struct html_node	*chld	,
 			*tmp	;
 	int		i	;
 
@@ -582,7 +588,7 @@ free_nodes( struct node* nd )
 	return 0 ;
 }
 
-// addChild( struct node *root , struct node *child )
+// addChild( struct html_node *root , struct html_node *child )
 // 	params:
 // 		root - parent
 // 		child - an element to add to parent
@@ -591,14 +597,14 @@ free_nodes( struct node* nd )
 //
 // ** Adding an html element to parent( copying everything, included with children of child )
 static uint
-addChild( struct node *root , struct node *child )
+addChild( struct html_node *root , struct html_node *child )
 {
-	struct node	*tmp	,
+	struct html_node	*tmp	,
 			*n_i	;
 	uint		i	;
 
 	root->child_number++ ;
-	tmp = calloc( 1 , sizeof( struct node ) ) ;
+	tmp = calloc( 1 , sizeof( struct html_node ) ) ;
 	
 	tmp->attr_number = child->attr_number ;
 	tmp->n_parsed = child->n_parsed ;
@@ -640,7 +646,7 @@ addChild( struct node *root , struct node *child )
 	return 1 ;
 }
 
-// find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
+// find_elems_by_tag( char *elem , struct html_node *nd , struct html_node *ret )
 //	params:
 //		elem - name of tag
 //		nd - root of tree
@@ -650,9 +656,9 @@ addChild( struct node *root , struct node *child )
 //
 // ** find all elements with given tag elem and write them to childs of ret
 void
-find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
+find_elems_by_tag( char *elem , struct html_node *nd , struct html_node *ret )
 {
-	struct node	*chld	;
+	struct html_node	*chld	;
 
 	if( nd->tag && !strcmp( nd->tag , elem ) )
 		addChild( ret , nd ) ;
@@ -665,7 +671,7 @@ find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
 	return ;
 }
 
-// find_elems_by_attr( char *name , char *value , struct node *nd , struct node *ret )
+// find_elems_by_attr( char *name , char *value , struct html_node *nd , struct html_node *ret )
 //	params:
 //		name - name of attribute
 //		value - value of given attribute
@@ -676,9 +682,9 @@ find_elems_by_tag( char *elem , struct node *nd , struct node *ret )
 //
 // ** find all elements with given attribute and write them to childs of ret. Value for now cannot be NULL, same for name. Will implement later.
 void
-find_elems_by_attr( char *name , char *value , struct node *nd , struct node *ret )
+find_elems_by_attr( char *name , char *value , struct html_node *nd , struct html_node *ret )
 {
-	struct node	*chld	;
+	struct html_node	*chld	;
 
 	int		i	,
 			c	;
@@ -703,7 +709,7 @@ find_elems_by_attr( char *name , char *value , struct node *nd , struct node *re
 	return ;
 }
 
-// find_elems_by_text( char *text , struct node *nd , struct node *ret )
+// find_elems_by_text( char *text , struct html_node *nd , struct html_node *ret )
 //	params:
 //		text - text to find in body if tag
 //		nd - root of tree
@@ -713,9 +719,9 @@ find_elems_by_attr( char *name , char *value , struct node *nd , struct node *re
 //
 // ** find all elements with given text and write them to childs of ret
 void
-find_elems_by_text( char *text , struct node *nd , struct node *ret )
+find_elems_by_text( char *text , struct html_node *nd , struct html_node *ret )
 {
-	struct node	*chld	;
+	struct html_node	*chld	;
 
 	if( nd->text && strstr( nd->text , text ) )
 		addChild( ret , nd ) ;
