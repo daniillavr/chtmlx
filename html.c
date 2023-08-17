@@ -214,7 +214,7 @@ compTag( char *in , char *list , int size )
 // 		pointer to dest
 //
 // ** Allocate memory for dest and copy string from source to dest
-char *
+static char *
 strnac( char **dest , char *source , uint size )
 {
 	if( !size )
