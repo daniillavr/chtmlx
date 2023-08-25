@@ -10,10 +10,10 @@
 
 #define	uint			unsigned int
 #define ull			unsigned long long
-#define HTML_VT_SIZE	17
-#define HTML_AT_SIZE			4
+#define HTML_VT_SIZE		17
+#define HTML_AT_SIZE		4
 #define HTML_TAGS_LEN		10
-#define HTML_CH_SZ			sizeof( char )
+#define HTML_CH_SZ		sizeof( char )
 
 extern char Void_Tags[ HTML_VT_SIZE ][ HTML_TAGS_LEN ] ;
 extern char Add_Tags[ HTML_AT_SIZE ][ HTML_TAGS_LEN ] ;
@@ -60,5 +60,8 @@ void print_tree_to_file( struct html_node * , uint , FILE * ) ;
 void find_elems_by_tag( char * , struct html_node * , struct html_node * ) ;
 void find_elems_by_attr( char * , char * , struct html_node *root , struct html_node *ret ) ;
 void find_elems_by_text( char * , struct html_node * , struct html_node * ) ;
+
+#undef	uint
+#undef ull
 
 #endif

@@ -3,8 +3,10 @@
 #define	TAB		" "
 #define	BF_SZ		( 1024 * 1024 * 10 )
 #define SZ_ATTR_BUFF	( 1024 * 1024 )
-#define WHTML_CH_SZ		sizeof( wchar_t )
+#define HTML_CH_SZ	sizeof( char )
 #define char_t		wchar_t
+#define	uint		unsigned int
+#define ull		unsigned long long
 
 static	unsigned long long Serial = 0 ;
 
