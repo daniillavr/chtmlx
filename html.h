@@ -62,6 +62,6 @@ void find_elems_by_attr( char * , char * , struct html_node *root , struct html_
 void find_elems_by_text( char * , struct html_node * , struct html_node * ) ;
 
 #undef	uint
-#undef ull
+#undef	ull
 
 #endif
